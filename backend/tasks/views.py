@@ -5,6 +5,7 @@ from rest_framework import status, permissions
 from tasks.models import Board, Task
 from tasks.serializers import BoardSerializer, TaskSerializer
 
+
 class BoardListCreateAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -22,11 +23,18 @@ class BoardListCreateAPIView(APIView):
             return Response(BoardSerializer(board).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class TaskListCreateAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        tasks = Task.objects(owner_id=request.user.id)
+        board_id = request.query_params.get('board')  # <- board filter
+        query = {"owner_id": request.user.id}
+
+        if board_id:
+            query["board_id"] = board_id
+
+        tasks = Task.objects(**query)
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data)
 
@@ -34,6 +42,7 @@ class TaskListCreateAPIView(APIView):
         data = request.data.copy()
         data["owner_id"] = request.user.id
         serializer = TaskSerializer(data=data)
+        print(serializer.error_messages, data)
         if serializer.is_valid():
             task = serializer.save()
             return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)

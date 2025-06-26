@@ -12,7 +12,7 @@ export default function TaskForm({ boardId }) {
       await axios.post('tasks/', {
         title,
         description,
-        board: boardId,
+        board_id: boardId,
       }, {
         headers: {
           Authorization: `Bearer ${token}`

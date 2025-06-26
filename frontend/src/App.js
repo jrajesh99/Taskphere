@@ -8,6 +8,7 @@ function App() {
       <nav>
           <a href="/login">Login</a> | 
           <a href="/boards">Boards</a>
+          <button onClick={handleLogout}>Logout</button>
         </nav>
       <Routes>
         <Route path="/boards" element={<BoardsPage />} />
@@ -16,5 +17,11 @@ function App() {
     </Router>
   );
 }
+
+const handleLogout = () => {
+  localStorage.removeItem('token');
+  window.location.href = '/login';
+};
+
 
 export default App;
