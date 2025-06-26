@@ -47,3 +47,18 @@ class TaskListCreateAPIView(APIView):
             task = serializer.save()
             return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def patch(self, request):
+        task_id = request.data.get("id")
+        if not task_id:
+            return Response({"error": "Task ID required"}, status=400)
+
+        task = Task.objects(id=task_id, owner_id=request.user.id).first()
+        if not task:
+            return Response({"error": "Task not found"}, status=404)
+
+        serializer = TaskSerializer(task, data=request.data, partial=True)
+        if serializer.is_valid():
+            updated_task = serializer.save()
+            return Response(TaskSerializer(updated_task).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
