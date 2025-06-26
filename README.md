@@ -26,7 +26,7 @@ A full-stack task & productivity management platform (Trello + Notion lite) buil
 
 ## 📁 Folder Structure
 - tasksphere/
-├── backend/ # Django + DRF
-├── frontend/ # React app
-├── docs/ # Design docs
-├── README.md
+- ├── backend/ # Django + DRF
+- ├── frontend/ # React app
+- ├── docs/ # Design docs
+- ├── README.md
