@@ -9,6 +9,7 @@ export default function BoardList() {
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [taskQuery, setTaskQuery] = useState("");
 
   useEffect(() => {
     const fetchBoardsAndTasks = async () => {
@@ -113,6 +114,21 @@ export default function BoardList() {
     <div>
       <h2>Boards</h2>
       <DragDropContext onDragEnd={handleDragEnd}>
+        <div style={{ marginBottom: "20px" }}>
+          <input
+            type="text"
+            placeholder="Search tasks..."
+            value={taskQuery}
+            onChange={(e) => setTaskQuery(e.target.value)}
+            style={{
+              padding: "8px",
+              width: "100%",
+              maxWidth: "400px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+            }}
+          />
+        </div>
         {boards.map((board) => (
           <div
             key={board.id}
@@ -148,7 +164,13 @@ export default function BoardList() {
             </div>
 
             {["todo", "in-progress", "done"].map((status) => (
-              <Droppable droppableId={status} key={`${board.id}-${status}`} isDropDisabled={false} isCombineEnabled={false} ignoreContainerClipping={false}>
+              <Droppable
+                droppableId={status}
+                key={`${board.id}-${status}`}
+                isDropDisabled={false}
+                isCombineEnabled={false}
+                ignoreContainerClipping={false}
+              >
                 {(provided) => (
                   <div
                     ref={provided.innerRef}
@@ -163,7 +185,16 @@ export default function BoardList() {
                             filterStatus === "all" ||
                             task.status === filterStatus
                         )
-                        .filter((task) => task.status === status)
+                        .filter(
+                          (task) =>
+                            task.status === status &&
+                            (task.title
+                              .toLowerCase()
+                              .includes(taskQuery.toLowerCase()) ||
+                              task.description
+                                .toLowerCase()
+                                .includes(taskQuery.toLowerCase()))
+                        )
                         .map((task, index) => (
                           <Draggable
                             draggableId={task.id.toString()}
