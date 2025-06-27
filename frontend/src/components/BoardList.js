@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import axios from "../api/axiosConfig";
 import TaskForm from "./TaskForm";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 export default function BoardList() {
   const [boards, setBoards] = useState([]);
   const [tasks, setTasks] = useState({});
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState("all");
   const token = localStorage.getItem("token");
+  const [filterStatus, setFilterStatus] = useState("all");
 
   useEffect(() => {
     const fetchBoardsAndTasks = async () => {
@@ -37,14 +38,17 @@ export default function BoardList() {
 
   const handleStatusChange = async (taskId, newStatus) => {
     try {
-      await axios.put(
-        `tasks/${taskId}/`,
-        { status: newStatus },
+      await axios.patch(
+        "tasks/",
+        {
+          id: taskId,
+          status: newStatus,
+        },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      // Reload tasks
+
       const updatedTasks = { ...tasks };
       for (let boardId in updatedTasks) {
         const taskRes = await axios.get(`tasks/?board=${boardId}`, {
@@ -93,9 +97,14 @@ export default function BoardList() {
     }
   };
 
-  const filterTasks = (taskList) => {
-    if (filterStatus === "all") return taskList;
-    return taskList.filter((task) => task.status === filterStatus);
+  const handleDragEnd = async (result) => {
+    const { destination, source, draggableId } = result;
+    if (!destination || destination.droppableId === source.droppableId) return;
+    try {
+      await handleStatusChange(draggableId, destination.droppableId);
+    } catch (error) {
+      console.error("Error moving task:", error);
+    }
   };
 
   if (loading) return <p>Loading boards and tasks...</p>;
@@ -103,75 +112,112 @@ export default function BoardList() {
   return (
     <div>
       <h2>Boards</h2>
-
-      {/* Filter Buttons */}
-      <div style={{ marginBottom: "20px" }}>
-        <label>Filter Tasks: </label>
-        {["all", "todo", "in-progress", "done"].map((status) => (
-          <button
-            key={status}
-            onClick={() => setFilterStatus(status)}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        {boards.map((board) => (
+          <div
+            key={board.id}
             style={{
-              margin: "0 5px",
-              padding: "5px 10px",
-              backgroundColor: filterStatus === status ? "#007bff" : "#ccc",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
+              border: "1px solid #ccc",
+              margin: "20px 0",
+              padding: "15px",
+              borderRadius: "8px",
             }}
           >
-            {status.toUpperCase()}
-          </button>
-        ))}
-      </div>
+            <h3>{board.title}</h3>
+            <p>{board.description}</p>
 
-      {boards.map((board) => (
-        <div
-          key={board.id}
-          style={{
-            border: "1px solid #ccc",
-            margin: "20px 0",
-            padding: "15px",
-            borderRadius: "8px",
-            backgroundColor: "#f9f9f9",
-          }}
-        >
-          <h3>{board.title}</h3>
-          <p>{board.description}</p>
+            <div style={{ marginBottom: "20px" }}>
+              <label>Filter Tasks: </label>
+              {["all", "todo", "in-progress", "done"].map((status) => (
+                <button
+                  key={`${board.id}-${status}`}
+                  onClick={() => setFilterStatus(status)}
+                  style={{
+                    margin: "0 5px",
+                    padding: "5px 10px",
+                    backgroundColor:
+                      filterStatus === status ? "#007bff" : "#ccc",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                  }}
+                >
+                  {status.toUpperCase()}
+                </button>
+              ))}
+            </div>
 
-          <h4>Tasks</h4>
-          <ul style={{ paddingLeft: "20px" }}>
-            {filterTasks(tasks[board.id] || []).map((task) => (
-              <li key={task.id} style={{ marginBottom: "8px" }}>
-                <strong>{task.title}</strong> - {task.description}
-                <select
-                  value={task.status}
-                  onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                  style={{ marginLeft: "10px" }}
-                >
-                  <option value="todo">To Do</option>
-                  <option value="in-progress">In Progress</option>
-                  <option value="done">Done</option>
-                </select>
-                <button
-                  onClick={() => handleEdit(task)}
-                  style={{ marginLeft: "10px" }}
-                >
-                  ✏️
-                </button>
-                <button
-                  onClick={() => handleDelete(task.id)}
-                  style={{ marginLeft: "5px", color: "red" }}
-                >
-                  ❌
-                </button>
-              </li>
+            {["todo", "in-progress", "done"].map((status) => (
+              <Droppable droppableId={status} key={`${board.id}-${status}`} isDropDisabled={false} isCombineEnabled={false} ignoreContainerClipping={false}>
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    style={{ marginBottom: "15px" }}
+                  >
+                    <h4>{status.toUpperCase()}</h4>
+                    <ul>
+                      {(tasks[board.id] || [])
+                        .filter(
+                          (task) =>
+                            filterStatus === "all" ||
+                            task.status === filterStatus
+                        )
+                        .filter((task) => task.status === status)
+                        .map((task, index) => (
+                          <Draggable
+                            draggableId={task.id.toString()}
+                            index={index}
+                            key={task.id}
+                          >
+                            {(provided) => (
+                              <li
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                              >
+                                <strong>{task.title}</strong>:{" "}
+                                {task.description}
+                                <select
+                                  value={task.status}
+                                  onChange={(e) =>
+                                    handleStatusChange(task.id, e.target.value)
+                                  }
+                                  style={{ marginLeft: "10px" }}
+                                >
+                                  <option value="todo">To Do</option>
+                                  <option value="in-progress">
+                                    In Progress
+                                  </option>
+                                  <option value="done">Done</option>
+                                </select>
+                                <button
+                                  onClick={() => handleEdit(task)}
+                                  style={{ marginLeft: "10px" }}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(task.id)}
+                                  style={{ marginLeft: "5px", color: "red" }}
+                                >
+                                  Delete
+                                </button>
+                              </li>
+                            )}
+                          </Draggable>
+                        ))}
+                      {provided.placeholder}
+                    </ul>
+                  </div>
+                )}
+              </Droppable>
             ))}
-          </ul>
 
-          <TaskForm boardId={board.id} />
-        </div>
-      ))}
+            <TaskForm boardId={board.id} />
+          </div>
+        ))}
+      </DragDropContext>
     </div>
   );
 }
