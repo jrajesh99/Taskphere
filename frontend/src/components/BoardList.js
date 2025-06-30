@@ -200,7 +200,11 @@ export default function BoardList() {
                                 .toLowerCase()
                                 .includes(taskQuery.toLowerCase()))
                         )
-                        .sort((a, b) => getPriorityOrder(a.priority) - getPriorityOrder(b.priority))
+                        .sort(
+                          (a, b) =>
+                            getPriorityOrder(a.priority) -
+                            getPriorityOrder(b.priority)
+                        )
                         .map((task, index) => (
                           <Draggable
                             draggableId={task.id.toString()}
@@ -225,7 +229,8 @@ export default function BoardList() {
                                   style={{
                                     fontSize: "12px",
                                     fontWeight: "bold",
-                                    backgroundColor: task.priority === "High"
+                                    backgroundColor:
+                                      task.priority === "High"
                                         ? "#dc3545"
                                         : task.priority === "Medium"
                                         ? "#ffc107"
@@ -235,11 +240,19 @@ export default function BoardList() {
                                     borderRadius: "12px",
                                     marginLeft: "8px",
                                     display: "inline-block",
-                                    textTransform: "uppercase"
+                                    textTransform: "uppercase",
                                   }}
                                 >
                                   {task.priority}
                                 </span>
+                                <p>
+                                  <strong>Due:</strong>{" "}
+                                  {task.due_date
+                                    ? new Date(
+                                        task.due_date
+                                      ).toLocaleDateString()
+                                    : "Not set"}
+                                </p>
                                 <br />
                                 {task.description}
                                 <br />
@@ -251,7 +264,9 @@ export default function BoardList() {
                                   style={{ marginTop: "5px" }}
                                 >
                                   <option value="todo">To Do</option>
-                                  <option value="in-progress">In Progress</option>
+                                  <option value="in-progress">
+                                    In Progress
+                                  </option>
                                   <option value="done">Done</option>
                                 </select>
                                 <button

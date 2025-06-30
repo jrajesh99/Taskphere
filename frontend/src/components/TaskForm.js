@@ -5,6 +5,7 @@ export default function TaskForm({ boardId }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState("Medium");
+  const [dueDate, setDueDate] = useState("");
   const token = localStorage.getItem("token");
 
   const handleSubmit = async (e) => {
@@ -16,6 +17,7 @@ export default function TaskForm({ boardId }) {
         description,
         board_id: boardId,
         priority,
+        due_date: dueDate,
       }, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -54,6 +56,15 @@ export default function TaskForm({ boardId }) {
         <option value="Medium">Medium Priority</option>
         <option value="Low">Low Priority</option>
       </select>
+      <label>
+        Due Date:
+        <input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          required
+        />
+      </label>
       <button type="submit">Add Task</button>
     </form>
   );
