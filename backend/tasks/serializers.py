@@ -19,6 +19,7 @@ class TaskSerializer(serializers.Serializer):
     title = serializers.CharField()
     description = serializers.CharField(allow_blank=True, required=False)
     status = serializers.ChoiceField(choices=["todo", "in-progress", "done"], default="todo")
+    priority = serializers.ChoiceField(choices=["Low", "Medium", "High"], default="Medium")
     board_id = serializers.CharField()
     owner_id = serializers.IntegerField()
 

@@ -4,6 +4,8 @@ import axios from '../api/axiosConfig';
 export default function TaskForm({ boardId }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [priority, setPriority] = useState("Medium");
+  const token = localStorage.getItem("token");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -13,22 +15,46 @@ export default function TaskForm({ boardId }) {
         title,
         description,
         board_id: boardId,
+        priority,
       }, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-      alert('Task created!');
+      setTitle("");
+      setDescription("");
+      setPriority("Medium");
+      window.location.reload(); // reload to fetch tasks 
     } catch (err) {
       console.error(err.response?.data || err.message);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input placeholder='Task Title' value={title} onChange={e => setTitle(e.target.value)} />
-      <textarea placeholder='Description' value={description} onChange={e => setDescription(e.target.value)} />
-      <button type='submit'>Create Task</button>
+    <form onSubmit={handleSubmit} style={{ marginTop: "10px" }}>
+      <input
+        type="text"
+        placeholder="Task title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        required
+      />
+      <input
+        type="text"
+        placeholder="Description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+      />
+      <select
+        value={priority}
+        onChange={(e) => setPriority(e.target.value)}
+        required
+      >
+        <option value="High">High Priority</option>
+        <option value="Medium">Medium Priority</option>
+        <option value="Low">Low Priority</option>
+      </select>
+      <button type="submit">Add Task</button>
     </form>
   );
 }

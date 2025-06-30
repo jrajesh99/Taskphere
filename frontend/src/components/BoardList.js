@@ -108,6 +108,11 @@ export default function BoardList() {
     }
   };
 
+  const getPriorityOrder = (priority) => {
+    const order = { High: 0, Medium: 1, Low: 2 };
+    return order[priority] ?? 3;
+  };
+
   if (loading) return <p>Loading boards and tasks...</p>;
 
   return (
@@ -178,7 +183,7 @@ export default function BoardList() {
                     style={{ marginBottom: "15px" }}
                   >
                     <h4>{status.toUpperCase()}</h4>
-                    <ul>
+                    <ul style={{ listStyle: "none", padding: 0 }}>
                       {(tasks[board.id] || [])
                         .filter(
                           (task) =>
@@ -195,6 +200,7 @@ export default function BoardList() {
                                 .toLowerCase()
                                 .includes(taskQuery.toLowerCase()))
                         )
+                        .sort((a, b) => getPriorityOrder(a.priority) - getPriorityOrder(b.priority))
                         .map((task, index) => (
                           <Draggable
                             draggableId={task.id.toString()}
@@ -206,20 +212,46 @@ export default function BoardList() {
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
+                                style={{
+                                  padding: "8px",
+                                  margin: "8px 0",
+                                  backgroundColor: "#f8f9fa",
+                                  borderRadius: "6px",
+                                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                                }}
                               >
-                                <strong>{task.title}</strong>:{" "}
+                                <strong>{task.title}</strong>{" "}
+                                <span
+                                  style={{
+                                    fontSize: "12px",
+                                    fontWeight: "bold",
+                                    backgroundColor: task.priority === "High"
+                                        ? "#dc3545"
+                                        : task.priority === "Medium"
+                                        ? "#ffc107"
+                                        : "#198754",
+                                    color: "white",
+                                    padding: "2px 8px",
+                                    borderRadius: "12px",
+                                    marginLeft: "8px",
+                                    display: "inline-block",
+                                    textTransform: "uppercase"
+                                  }}
+                                >
+                                  {task.priority}
+                                </span>
+                                <br />
                                 {task.description}
+                                <br />
                                 <select
                                   value={task.status}
                                   onChange={(e) =>
                                     handleStatusChange(task.id, e.target.value)
                                   }
-                                  style={{ marginLeft: "10px" }}
+                                  style={{ marginTop: "5px" }}
                                 >
                                   <option value="todo">To Do</option>
-                                  <option value="in-progress">
-                                    In Progress
-                                  </option>
+                                  <option value="in-progress">In Progress</option>
                                   <option value="done">Done</option>
                                 </select>
                                 <button
@@ -230,7 +262,10 @@ export default function BoardList() {
                                 </button>
                                 <button
                                   onClick={() => handleDelete(task.id)}
-                                  style={{ marginLeft: "5px", color: "red" }}
+                                  style={{
+                                    marginLeft: "5px",
+                                    color: "red",
+                                  }}
                                 >
                                   Delete
                                 </button>

@@ -12,6 +12,7 @@ class Task(me.Document):
     title = me.StringField(required=True)
     description = me.StringField()
     status = me.StringField(choices=["todo", "in-progress", "done"], default="todo")
+    priority = me.StringField(choices=["Low", "Medium", "High"], default="Medium")
     board_id = me.StringField(required=True)
     owner_id = me.IntField(required=True)
     created_at = me.DateTimeField(auto_now_add=True)
