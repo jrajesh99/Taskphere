@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "../api/axiosConfig"; 
+import axios from "../api/axiosConfig";
 
 const TaskForm = ({ boardId, onTaskCreated }) => {
   const [title, setTitle] = useState("");
@@ -10,6 +10,9 @@ const TaskForm = ({ boardId, onTaskCreated }) => {
   const [labels, setLabels] = useState("");
   const [users, setUsers] = useState([]);
   const [formData, setFormData] = useState({ assignees: [] });
+  const [labelColors, setLabelColors] = useState({});
+  const [newLabel, setNewLabel] = useState("");
+  const [newLabelColor, setNewLabelColor] = useState("#000000");
 
   useEffect(() => {
     // Fetch users to populate assignee list
@@ -41,6 +44,7 @@ const TaskForm = ({ boardId, onTaskCreated }) => {
       priority,
       due_date: dueDate,
       labels: labels.split(",").map((label) => label.trim()),
+      label_colors: labelColors,
       board_id: boardId,
       assignees: formData.assignees,
     };
@@ -61,6 +65,10 @@ const TaskForm = ({ boardId, onTaskCreated }) => {
       setPriority("Medium");
       setDueDate("");
       setLabels("");
+      setLabels([]);
+      setLabelColors({});
+      setNewLabel("");
+      setNewLabelColor("#000000");
       setFormData({ assignees: [] });
     } catch (error) {
       console.error("Error creating task:", error.response?.data || error);
@@ -115,12 +123,76 @@ const TaskForm = ({ boardId, onTaskCreated }) => {
       </div>
 
       <div>
-        <label>Labels (comma-separated):</label>
+        <label>Add Label:</label>
         <input
-          value={labels}
-          onChange={(e) => setLabels(e.target.value)}
+          type="text"
+          value={newLabel}
+          onChange={(e) => setNewLabel(e.target.value)}
+          placeholder="Label name"
         />
+        <input
+          type="color"
+          value={newLabelColor}
+          onChange={(e) => setNewLabelColor(e.target.value)}
+          style={{ marginLeft: "5px" }}
+        />
+        <button
+          type="button"
+          onClick={() => {
+            if (!newLabel.trim() || labels.includes(newLabel.trim())) return;
+            setLabels([...labels, newLabel.trim()]);
+            setLabelColors({
+              ...labelColors,
+              [newLabel.trim()]: newLabelColor,
+            });
+            setNewLabel("");
+            setNewLabelColor("#000000");
+          }}
+          style={{ marginLeft: "5px" }}
+        >
+          Add
+        </button>
       </div>
+
+      {labels.length > 0 && (
+        <div style={{ marginTop: "10px" }}>
+          <strong>Labels:</strong>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+            {labels.map((label) => (
+              <span
+                key={label}
+                style={{
+                  backgroundColor: labelColors[label] || "#ddd",
+                  color: "#fff",
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                {label}
+                <button
+                  onClick={() => {
+                    setLabels(labels.filter((l) => l !== label));
+                    const updatedColors = { ...labelColors };
+                    delete updatedColors[label];
+                    setLabelColors(updatedColors);
+                  }}
+                  style={{
+                    marginLeft: "5px",
+                    background: "transparent",
+                    border: "none",
+                    color: "#fff",
+                    cursor: "pointer",
+                  }}
+                >
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <label>Assignees:</label>
@@ -130,9 +202,8 @@ const TaskForm = ({ boardId, onTaskCreated }) => {
           onChange={(e) =>
             setFormData({
               ...formData,
-              assignees: Array.from(
-                e.target.selectedOptions,
-                (option) => Number(option.value)
+              assignees: Array.from(e.target.selectedOptions, (option) =>
+                Number(option.value)
               ),
             })
           }

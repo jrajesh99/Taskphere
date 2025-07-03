@@ -23,6 +23,7 @@ class TaskSerializer(serializers.Serializer):
     priority = serializers.ChoiceField(choices=["Low", "Medium", "High"], default="Medium")
     due_date = serializers.DateTimeField()
     labels = serializers.ListField(child=serializers.CharField(), required=False)
+    label_colors = serializers.DictField(child=serializers.CharField(), required=False)
     board_id = serializers.CharField()
     owner_id = serializers.IntegerField()
     assignees = serializers.ListField(child=serializers.IntegerField(), required=False)

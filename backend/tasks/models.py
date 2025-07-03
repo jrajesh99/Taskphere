@@ -17,6 +17,7 @@ class Task(me.Document):
     priority = me.StringField(choices=["Low", "Medium", "High"], default="Medium")
     due_date = me.DateTimeField()
     labels = me.ListField(me.StringField(), default=[])
+    label_colors = me.MapField(field=me.StringField())  # {"urgent": "#ff0000", "bug": "#ffa500"}
     board_id = me.StringField(required=True)
     owner_id = me.IntField(required=True)
     assignees = me.ListField(me.IntField())  # List of Django User IDs

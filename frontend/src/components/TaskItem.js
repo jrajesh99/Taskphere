@@ -21,6 +21,16 @@ export default function TaskItem({
         )
       );
   };
+  const getContrastColor = (hexColor) => {
+    // Convert hex to RGB
+    const r = parseInt(hexColor.substr(1, 2), 16);
+    const g = parseInt(hexColor.substr(3, 2), 16);
+    const b = parseInt(hexColor.substr(5, 2), 16);
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? "#000000" : "#ffffff";
+  };
+
   return (
     <Draggable draggableId={task.id.toString()} index={index}>
       {(provided, snapshot) => (
@@ -55,8 +65,8 @@ export default function TaskItem({
                 borderRadius: "4px",
                 fontSize: "0.75rem",
                 marginLeft: "8px",
-                fontSize: "0.9em", 
-                color: "#666"
+                fontSize: "0.9em",
+                color: "#666",
               }}
             >
               {task.priority}
@@ -70,20 +80,26 @@ export default function TaskItem({
           )}
           <div style={{ marginTop: "6px" }}>
             {task.labels &&
-              task.labels.map((label, i) => (
-                <span
-                  key={i}
-                  style={{
-                    backgroundColor: "#e0e0e0",
-                    borderRadius: "4px",
-                    padding: "2px 6px",
-                    marginRight: "4px",
-                    fontSize: "0.8rem",
-                  }}
-                >
-                  #{label}
-                </span>
-              ))}
+              task.labels.map((label, i) => {
+                const bgColor = task.label_colors?.[label] || "#e0e0e0";
+                const textColor = getContrastColor(bgColor);
+
+                return (
+                  <span
+                    key={i}
+                    style={{
+                      backgroundColor: bgColor,
+                      color: textColor,
+                      borderRadius: "4px",
+                      padding: "2px 6px",
+                      marginRight: "4px",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    #{label}
+                  </span>
+                );
+              })}
           </div>
           <div style={{ marginTop: "8px" }}>
             <select
