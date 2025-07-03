@@ -1,5 +1,6 @@
 import TaskColumn from "./TaskColumn";
 import TaskForm from "./TaskForm";
+import { useState } from "react";
 
 const statuses = ["todo", "in-progress", "done"];
 
@@ -13,6 +14,8 @@ export default function BoardCard({
   handleEdit,
   handleDelete,
 }) {
+  const [filterPriority, setFilterPriority] = useState("all");
+  const [dueDateFilter, setDueDateFilter] = useState("all");
   return (
     <div
       style={{
@@ -45,6 +48,46 @@ export default function BoardCard({
         ))}
       </div>
 
+      <div style={{ marginBottom: "20px" }}>
+        <label>Priority: </label>
+        {["all", "High", "Medium", "Low"].map((level) => (
+          <button
+            key={level}
+            onClick={() => setFilterPriority(level)}
+            style={{
+              margin: "0 5px",
+              padding: "5px 10px",
+              backgroundColor: filterPriority === level ? "#28a745" : "#ccc",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+            }}
+          >
+            {level}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ marginBottom: "20px" }}>
+        <label>Due Date: </label>
+        {["all", "overdue", "today", "upcoming"].map((type) => (
+          <button
+            key={type}
+            onClick={() => setDueDateFilter(type)}
+            style={{
+              margin: "0 5px",
+              padding: "5px 10px",
+              backgroundColor: dueDateFilter === type ? "#6f42c1" : "#ccc",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+            }}
+          >
+            {type.charAt(0).toUpperCase() + type.slice(1)}
+          </button>
+        ))}
+      </div>
+
       {statuses.map((status) => (
         <TaskColumn
           key={`${board.id}-${status}`}
@@ -52,6 +95,8 @@ export default function BoardCard({
           status={status}
           tasks={tasks}
           filterStatus={filterStatus}
+          filterPriority={filterPriority}
+          dueDateFilter={dueDateFilter}
           taskQuery={taskQuery}
           handleStatusChange={handleStatusChange}
           handleEdit={handleEdit}
@@ -62,7 +107,7 @@ export default function BoardCard({
       <TaskForm
         boardId={board.id}
         onTaskCreated={(newTask) => {
-            console.log("New task created:", newTask);
+          console.log("New task created:", newTask);
         }}
       />
     </div>
