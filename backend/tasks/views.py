@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
+from rest_framework.generics import RetrieveUpdateAPIView
 
 from tasks.models import Board, Task
 from tasks.serializers import BoardSerializer, TaskSerializer
@@ -102,3 +103,12 @@ class TaskDetailAPIView(APIView):
             return Response({'error': 'Task not found'}, status=404)
         task.delete()
         return Response(status=204)
+
+
+class TaskDetailUpdateView(RetrieveUpdateAPIView):
+    serializer_class = TaskSerializer
+    lookup_field = "id"
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Task.objects.all()

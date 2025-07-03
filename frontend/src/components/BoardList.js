@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "../api/axiosConfig";
 import { DragDropContext } from "@hello-pangea/dnd";
 import BoardCard from "./BoardCard";
+import EditTaskModal from "./EditTaskModal";
 
 export default function BoardList() {
   const [boards, setBoards] = useState([]);
@@ -10,6 +11,7 @@ export default function BoardList() {
   const token = localStorage.getItem("token");
   const [filterStatus, setFilterStatus] = useState("all");
   const [taskQuery, setTaskQuery] = useState("");
+  const [taskBeingEdited, setTaskBeingEdited] = useState(null);
 
   useEffect(() => {
     const fetchBoardsAndTasks = async () => {
@@ -57,20 +59,32 @@ export default function BoardList() {
     }
   };
 
-  const handleEdit = async (task) => {
-    const newTitle = prompt("Edit title", task.title);
-    const newDesc = prompt("Edit description", task.description);
-    if (newTitle !== null && newDesc !== null) {
-      try {
-        await axios.put(
-          `tasks/${task.id}/`,
-          { title: newTitle, description: newDesc },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        window.location.reload();
-      } catch (err) {
-        console.error(err);
+  
+  const handleEdit = (task) => {
+    setTaskBeingEdited(task);
+  };
+
+  const handleSaveEdit = async (updatedTask) => {
+    try {
+      await axios.put(`tasks/${updatedTask.id}/`, updatedTask, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const updatedTasks = { ...tasks };
+      const boardId = boards.find((board) =>
+        (tasks[board.id] || []).some((t) => t.id === updatedTask.id)
+      )?.id;
+
+      if (boardId) {
+        const taskRes = await axios.get(`tasks/?board=${boardId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        updatedTasks[boardId] = taskRes.data;
       }
+
+      setTasks(updatedTasks);
+      setTaskBeingEdited(null);
+    } catch (err) {
+      console.error("Error updating task:", err);
     }
   };
 
@@ -132,6 +146,13 @@ export default function BoardList() {
           />
         ))}
       </DragDropContext>
+      {taskBeingEdited && (
+        <EditTaskModal
+          task={taskBeingEdited}
+          onSave={handleSaveEdit}
+          onClose={() => setTaskBeingEdited(null)}
+        />
+      )}
     </div>
   );
 }

@@ -77,10 +77,15 @@ export default function TaskItem({
               <option value="in-progress">In Progress</option>
               <option value="done">Done</option>
             </select>
-            <button onClick={() => handleEdit(task)} style={{ marginLeft: "10px" }}>
+            <button
+              type="button"
+              onClick={() => handleEdit(task)}
+              style={{ marginLeft: "10px" }}
+            >
               Edit
             </button>
             <button
+              type="button"
               onClick={() => handleDelete(task.id)}
               style={{ marginLeft: "5px", color: "red" }}
             >
