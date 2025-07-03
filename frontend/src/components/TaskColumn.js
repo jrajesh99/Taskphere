@@ -12,6 +12,7 @@ export default function TaskColumn({
   handleStatusChange,
   handleEdit,
   handleDelete,
+  sortBy,
 }) {
   const isDueMatch = (dueDateStr) => {
     if (dueDateFilter === "all") return true;
@@ -39,6 +40,20 @@ export default function TaskColumn({
         task.description.toLowerCase().includes(taskQuery.toLowerCase()))
   );
 
+  const sorted = [...filtered];
+
+  if (sortBy === "due-date-asc") {
+    sorted.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+  } else if (sortBy === "due-date-desc") {
+    sorted.sort((a, b) => new Date(b.due_date) - new Date(a.due_date));
+  } else if (sortBy === "priority-asc") {
+    const order = { High: 1, Medium: 2, Low: 3 };
+    sorted.sort((a, b) => order[a.priority] - order[b.priority]);
+  } else if (sortBy === "priority-desc") {
+    const order = { High: 1, Medium: 2, Low: 3 };
+    sorted.sort((a, b) => order[b.priority] - order[a.priority]);
+  }
+
   return (
     <Droppable droppableId={`${boardId}-${status}`}>
       {(provided) => (
@@ -49,7 +64,7 @@ export default function TaskColumn({
         >
           <h4>{status.toUpperCase()}</h4>
           <ul style={{ listStyle: "none", padding: 0 }}>
-            {filtered.map((task, index) => (
+            {sorted.map((task, index) => (
               <TaskItem
                 key={task.id}
                 task={task}

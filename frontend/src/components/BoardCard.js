@@ -16,6 +16,7 @@ export default function BoardCard({
 }) {
   const [filterPriority, setFilterPriority] = useState("all");
   const [dueDateFilter, setDueDateFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("none");
   return (
     <div
       style={{
@@ -88,6 +89,25 @@ export default function BoardCard({
         ))}
       </div>
 
+      <div style={{ marginBottom: "20px" }}>
+        <label>Sort By: </label>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          style={{
+            padding: "5px 10px",
+            borderRadius: "4px",
+            marginLeft: "8px",
+          }}
+        >
+          <option value="none">None</option>
+          <option value="due-date-asc">Due Date ↑</option>
+          <option value="due-date-desc">Due Date ↓</option>
+          <option value="priority-asc">Priority ↑</option>
+          <option value="priority-desc">Priority ↓</option>
+        </select>
+      </div>
+
       {statuses.map((status) => (
         <TaskColumn
           key={`${board.id}-${status}`}
@@ -101,6 +121,7 @@ export default function BoardCard({
           handleStatusChange={handleStatusChange}
           handleEdit={handleEdit}
           handleDelete={handleDelete}
+          sortBy={sortBy}
         />
       ))}
 
