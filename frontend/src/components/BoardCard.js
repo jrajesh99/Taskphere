@@ -17,6 +17,12 @@ export default function BoardCard({
   const [filterPriority, setFilterPriority] = useState("all");
   const [dueDateFilter, setDueDateFilter] = useState("all");
   const [sortBy, setSortBy] = useState("none");
+  const [filterLabel, setFilterLabel] = useState(null);
+
+  const uniqueLabels = Array.from(
+    new Set(tasks.flatMap((task) => task.labels || []))
+  );
+
   return (
     <div
       style={{
@@ -28,6 +34,30 @@ export default function BoardCard({
     >
       <h3>{board.title}</h3>
       <p>{board.description}</p>
+
+      {uniqueLabels.length > 0 && (
+        <div style={{ marginBottom: "15px" }}>
+          <label>Filter by Label: </label>
+          {uniqueLabels.map((label) => (
+            <button
+              key={label}
+              onClick={() =>
+                setFilterLabel((prev) => (prev === label ? null : label))
+              }
+              style={{
+                margin: "0 5px 5px 0",
+                padding: "4px 10px",
+                backgroundColor: filterLabel === label ? "#6c5ce7" : "#dfe6e9",
+                color: filterLabel === label ? "white" : "#2d3436",
+                border: "none",
+                borderRadius: "6px",
+              }}
+            >
+              #{label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div style={{ marginBottom: "20px" }}>
         <label>Filter Tasks: </label>
@@ -122,6 +152,7 @@ export default function BoardCard({
           handleEdit={handleEdit}
           handleDelete={handleDelete}
           sortBy={sortBy}
+          filterLabel={filterLabel}
         />
       ))}
 

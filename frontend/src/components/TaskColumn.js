@@ -13,6 +13,7 @@ export default function TaskColumn({
   handleEdit,
   handleDelete,
   sortBy,
+  filterLabel
 }) {
   const isDueMatch = (dueDateStr) => {
     if (dueDateFilter === "all") return true;
@@ -34,6 +35,7 @@ export default function TaskColumn({
     (task) =>
       (filterStatus === "all" || task.status === filterStatus) &&
       task.status === status &&
+      (!filterLabel || (task.labels || []).includes(filterLabel)) &&
       (filterPriority === "all" || task.priority === filterPriority) &&
       isDueMatch(task.due_date) &&
       (task.title.toLowerCase().includes(taskQuery.toLowerCase()) ||
