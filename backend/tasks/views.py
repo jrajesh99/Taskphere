@@ -85,6 +85,17 @@ class TaskDetailAPIView(APIView):
             return Response(TaskSerializer(updated_task).data)
         return Response(serializer.errors, status=400)
 
+    def patch(self, request, pk):
+        try:
+            task = Task.objects.get(id=pk)
+            status = request.data.get('status')
+            if status:
+                task.status = status
+                task.save()
+            return Response({'message': 'Status updated'}, status=200)
+        except Task.DoesNotExist:
+            return Response({'error': 'Task not found'}, status=404)
+
     def delete(self, request, pk):
         task = self.get_object(pk, request.user.id)
         if not task:
