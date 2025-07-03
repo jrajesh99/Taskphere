@@ -6,7 +6,21 @@ export default function TaskItem({
   handleStatusChange,
   handleEdit,
   handleDelete,
+  taskQuery,
 }) {
+  const highlightMatch = (text, query) => {
+    if (!query) return text;
+    const regex = new RegExp(`(${query})`, "gi");
+    return text
+      .split(regex)
+      .map((part, i) =>
+        part.toLowerCase() === query.toLowerCase() ? (
+          <mark key={i}>{part}</mark>
+        ) : (
+          part
+        )
+      );
+  };
   return (
     <Draggable draggableId={task.id.toString()} index={index}>
       {(provided, snapshot) => (
@@ -15,6 +29,7 @@ export default function TaskItem({
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           style={{
+            background: "#f9f9f9",
             backgroundColor: snapshot.isDragging ? "#e0f7fa" : "#f9f9f9",
             borderRadius: "8px",
             padding: "10px",
@@ -25,7 +40,7 @@ export default function TaskItem({
             ...provided.draggableProps.style,
           }}
         >
-          <strong>{task.title}</strong>{" "}
+          <strong>{highlightMatch(task.title, taskQuery)}</strong>{" "}
           {task.priority && (
             <span
               style={{
@@ -40,12 +55,14 @@ export default function TaskItem({
                 borderRadius: "4px",
                 fontSize: "0.75rem",
                 marginLeft: "8px",
+                fontSize: "0.9em", 
+                color: "#666"
               }}
             >
               {task.priority}
             </span>
           )}
-          <div>{task.description}</div>
+          <div>{highlightMatch(task.description, taskQuery)}</div>
           {task.due_date && (
             <div style={{ fontSize: "0.85rem" }}>
               📅 Due: {new Date(task.due_date).toLocaleDateString()}

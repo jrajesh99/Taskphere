@@ -72,6 +72,7 @@ export default function TaskColumn({
                 handleStatusChange={handleStatusChange}
                 handleEdit={handleEdit}
                 handleDelete={handleDelete}
+                taskQuery={taskQuery}
               />
             ))}
             {provided.placeholder}
