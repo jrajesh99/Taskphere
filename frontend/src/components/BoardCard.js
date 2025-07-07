@@ -13,15 +13,27 @@ export default function BoardCard({
   handleStatusChange,
   handleEdit,
   handleDelete,
+  handleTaskCreated,
 }) {
   const [filterPriority, setFilterPriority] = useState("all");
   const [dueDateFilter, setDueDateFilter] = useState("all");
   const [sortBy, setSortBy] = useState("none");
   const [filterLabel, setFilterLabel] = useState(null);
+  const [setTasks] = useState(null);
+  const [taskToEdit, setTaskToEdit] = useState(null);
+  const handleTaskEdit = (task) => setTaskToEdit(task);
 
   const uniqueLabels = Array.from(
     new Set(tasks.flatMap((task) => task.labels || []))
   );
+
+  const handleTaskUpdated = (updatedTask) => {
+    const updatedTasks = tasks.map((t) =>
+      t.id === updatedTask.id ? updatedTask : t
+    );
+    setTasks(updatedTasks);
+    setTaskToEdit(null);
+  };
 
   return (
     <div
@@ -158,9 +170,9 @@ export default function BoardCard({
 
       <TaskForm
         boardId={board.id}
-        onTaskCreated={(newTask) => {
-          console.log("New task created:", newTask);
-        }}
+        taskToEdit={taskToEdit}
+        onTaskCreated={handleTaskCreated}
+        onTaskUpdated={handleTaskUpdated}
       />
     </div>
   );

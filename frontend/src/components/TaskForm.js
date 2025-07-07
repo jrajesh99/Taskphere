@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/axiosConfig";
 
-const TaskForm = ({ boardId, onTaskCreated }) => {
+const TaskForm = ({ boardId, onTaskCreated, onTaskUpdated, taskToEdit  }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("todo");
@@ -33,6 +33,19 @@ const TaskForm = ({ boardId, onTaskCreated }) => {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    if (taskToEdit) {
+      setTitle(taskToEdit.title || "");
+      setDescription(taskToEdit.description || "");
+      setStatus(taskToEdit.status || "todo");
+      setPriority(taskToEdit.priority || "Medium");
+      setDueDate(taskToEdit.due_date?.slice(0, 10) || "");
+      setLabels(taskToEdit.labels?.join(",") || "");
+      setLabelColors(taskToEdit.label_colors || {});
+      setFormData({ assignees: taskToEdit.assignees || [] });
+    }
+  }, [taskToEdit]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -50,13 +63,20 @@ const TaskForm = ({ boardId, onTaskCreated }) => {
     };
 
     try {
-      const response = await axios.post("tasks/", taskData, {
+      const url = taskToEdit ? `tasks/${taskToEdit.id}/` : "tasks/";
+      const method = taskToEdit ? "put" : "post";
+
+      const response = await axios[method](url, taskData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       console.log("Task created:", response.data);
-      onTaskCreated(response.data);
+      if (taskToEdit) {
+        onTaskUpdated(response.data); // pass updated task to parent
+      } else {
+        onTaskCreated(response.data);
+      }
 
       // Reset form
       setTitle("");

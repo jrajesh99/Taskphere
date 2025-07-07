@@ -143,6 +143,13 @@ export default function BoardList() {
             handleStatusChange={handleStatusChange}
             handleEdit={handleEdit}
             handleDelete={handleDelete}
+            handleTaskCreated={(newTask) => {
+              setTasks((prev) => {
+                const updated = { ...prev };
+                updated[board.id] = [...(updated[board.id] || []), newTask];
+                return updated;
+              });
+            }}
           />
         ))}
       </DragDropContext>
