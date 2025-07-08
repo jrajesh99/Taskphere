@@ -37,7 +37,7 @@ class Comment(me.Document):
 
 User = get_user_model()
 
-class ActivityLog(Document):
+class ActivityLog(me.Document):
     meta = {'collection': 'activity_logs'}
 
     task = me.ReferenceField(Task, required=True, reverse_delete_rule=2)
