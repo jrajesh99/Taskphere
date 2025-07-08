@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.generics import RetrieveUpdateAPIView
 
-from tasks.models import Board, Task
-from tasks.serializers import BoardSerializer, TaskSerializer
+from tasks.models import Board, Task, Comment
+from tasks.serializers import BoardSerializer, TaskSerializer, CommentSerializer
 
 
 class BoardListCreateAPIView(APIView):
@@ -113,3 +113,19 @@ class TaskDetailUpdateView(RetrieveUpdateAPIView):
 
     def get_queryset(self):
         return Task.objects.all()
+
+class TaskCommentsView(APIView):
+    def get(self, request, task_id):
+        comments = Comment.objects(task_id=task_id).order_by('-created_at')
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, task_id):
+        data = request.data.copy()
+        data['task_id'] = task_id
+        serializer = CommentSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

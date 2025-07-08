@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from tasks.models import Task, Board
+from tasks.models import Task, Board, Comment
 from accounts.models import User
 from accounts.serializers import UserSerializer
 
@@ -42,3 +42,22 @@ class TaskSerializer(serializers.Serializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+
+class CommentSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    task_id = serializers.CharField()
+    author = serializers.CharField()
+    content = serializers.CharField()
+    created_at = serializers.DateTimeField(read_only=True)
+
+    def create(self, validated_data):
+        return Comment(**validated_data).save()
+
+    def to_representation(self, instance):
+        return {
+            "id": str(instance.id),
+            "task_id": instance.task_id,
+            "author": instance.author,
+            "content": instance.content,
+            "created_at": instance.created_at,
+        }

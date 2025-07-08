@@ -1,5 +1,6 @@
 import mongoengine as me
 from mongoengine import ReferenceField, ListField
+import datetime
 
 class Board(me.Document):
     title = me.StringField(required=True)
@@ -24,3 +25,11 @@ class Task(me.Document):
     created_at = me.DateTimeField(auto_now_add=True)
 
     meta = {'collection': 'tasks'}
+
+class Comment(me.Document):
+    task_id = me.StringField(required=True)
+    author = me.StringField(required=True)
+    content = me.StringField(required=True)
+    created_at = me.DateTimeField(default=datetime.datetime.now())
+
+    meta = {'collection': 'comments'}

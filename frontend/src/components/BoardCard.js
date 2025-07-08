@@ -3,7 +3,7 @@ import TaskForm from "./TaskForm";
 import CreateTaskModal from "./CreateTaskModal";
 import { useState } from "react";
 
-const statuses = ["todo", "inprogress", "done"];
+const statuses = ["todo", "in-progress", "done"];
 
 export default function BoardCard({
   board,
