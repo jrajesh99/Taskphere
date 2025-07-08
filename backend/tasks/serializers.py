@@ -46,7 +46,7 @@ class TaskSerializer(serializers.Serializer):
 class CommentSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     task_id = serializers.CharField()
-    author = serializers.CharField()
+    author = serializers.CharField(required=False)
     content = serializers.CharField()
     created_at = serializers.DateTimeField(read_only=True)
 

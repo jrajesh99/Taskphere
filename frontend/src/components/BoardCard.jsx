@@ -25,7 +25,6 @@ export default function BoardCard({
   const [setTasks] = useState({});
   const handleTaskEdit = handleEdit;
 
-
   const uniqueLabels = Array.from(
     new Set(tasks.flatMap((task) => task.labels || []))
   );

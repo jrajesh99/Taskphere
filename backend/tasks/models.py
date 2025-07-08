@@ -1,5 +1,6 @@
 import mongoengine as me
 from mongoengine import ReferenceField, ListField
+from django.contrib.auth import get_user_model
 import datetime
 
 class Board(me.Document):
@@ -28,8 +29,9 @@ class Task(me.Document):
 
 class Comment(me.Document):
     task_id = me.StringField(required=True)
-    author = me.StringField(required=True)
+    author = me.StringField(required=False)
     content = me.StringField(required=True)
     created_at = me.DateTimeField(default=datetime.datetime.now())
 
     meta = {'collection': 'comments'}
+

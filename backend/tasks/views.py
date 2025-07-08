@@ -124,6 +124,8 @@ class TaskCommentsView(APIView):
         data = request.data.copy()
         data['task_id'] = task_id
         serializer = CommentSerializer(data=data)
+        if not serializer.is_valid():
+            print(serializer.errors, data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)

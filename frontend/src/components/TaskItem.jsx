@@ -1,4 +1,6 @@
 import { Draggable } from "@hello-pangea/dnd";
+import React, { useState } from "react";
+import CommentSection from "./CommentSection";
 
 export default function TaskItem({
   task,
@@ -30,6 +32,8 @@ export default function TaskItem({
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance > 0.6 ? "#000000" : "#ffffff";
   };
+
+  const [showComments, setShowComments] = useState(false);
 
   return (
     <Draggable draggableId={task.id.toString()} index={index}>
@@ -124,6 +128,19 @@ export default function TaskItem({
             >
               Delete
             </button>
+            <button
+              onClick={() => setShowComments((prev) => !prev)}
+              style={{ marginTop: "5px", fontSize: "14px", color: "#0984e3" }}
+            >
+              💬 Comments
+            </button>
+
+            {showComments && (
+              <CommentSection
+                taskId={task.id}
+                onClose={() => setShowComments(false)}
+              />
+            )}
           </div>
         </li>
       )}
