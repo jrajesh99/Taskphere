@@ -5,6 +5,7 @@ from rest_framework.generics import RetrieveUpdateAPIView
 
 from tasks.models import Board, Task, Comment, ActivityLog
 from tasks.serializers import BoardSerializer, TaskSerializer, CommentSerializer, ActivityLogSerializer
+from tasks.utils import log_activity  # ✅ Activity log function
 
 
 class BoardListCreateAPIView(APIView):
@@ -29,7 +30,7 @@ class TaskListCreateAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        board_id = request.query_params.get('board')  # <- board filter
+        board_id = request.query_params.get('board')
         query = {"owner_id": request.user.id}
 
         if board_id:
@@ -47,9 +48,17 @@ class TaskListCreateAPIView(APIView):
             print(serializer.errors)
         if serializer.is_valid():
             task = serializer.save()
+
+            log_activity(
+                task=task,
+                user_id=request.user.id,
+                action="created",
+                message=f"Task '{task.title}' created"
+            )
+
             return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     def patch(self, request):
         task_id = request.data.get("id")
         if not task_id:
@@ -59,10 +68,28 @@ class TaskListCreateAPIView(APIView):
         if not task:
             return Response({"error": "Task not found"}, status=404)
 
+        old_status = task.status
         serializer = TaskSerializer(task, data=request.data, partial=True)
         if serializer.is_valid():
             updated_task = serializer.save()
+
+            log_activity(
+                task=updated_task,
+                user_id=request.user.id,
+                action="updated",
+                message=f"Task '{updated_task.title}' updated"
+            )
+
+            if 'status' in request.data and old_status != request.data['status']:
+                log_activity(
+                    task=updated_task,
+                    user_id=request.user.id,
+                    action="status_changed",
+                    message=f"Status changed from {old_status} to {request.data['status']}"
+                )
+
             return Response(TaskSerializer(updated_task).data, status=status.HTTP_200_OK)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -81,19 +108,47 @@ class TaskDetailAPIView(APIView):
             return Response({'error': 'Task not found'}, status=404)
 
         data = request.data.copy()
+        old_status = task.status
         serializer = TaskSerializer(task, data=data, partial=True)
+
         if serializer.is_valid():
             updated_task = serializer.save()
+
+            log_activity(
+                task=updated_task,
+                user_id=request.user.id,
+                action="updated",
+                message=f"Task '{updated_task.title}' updated"
+            )
+
+            if 'status' in data and old_status != data['status']:
+                log_activity(
+                    task=updated_task,
+                    user_id=request.user.id,
+                    action="status_changed",
+                    message=f"Status changed from {old_status} to {data['status']}"
+                )
+
             return Response(TaskSerializer(updated_task).data)
         return Response(serializer.errors, status=400)
 
     def patch(self, request, pk):
         try:
             task = Task.objects.get(id=pk)
-            status = request.data.get('status')
-            if status:
-                task.status = status
+            old_status = task.status
+            new_status = request.data.get('status')
+
+            if new_status:
+                task.status = new_status
                 task.save()
+
+                log_activity(
+                    task=task,
+                    user_id=request.user.id,
+                    action="status_changed",
+                    message=f"Status changed from {old_status} to {new_status}"
+                )
+
             return Response({'message': 'Status updated'}, status=200)
         except Task.DoesNotExist:
             return Response({'error': 'Task not found'}, status=404)
@@ -102,6 +157,14 @@ class TaskDetailAPIView(APIView):
         task = self.get_object(pk, request.user.id)
         if not task:
             return Response({'error': 'Task not found'}, status=404)
+
+        log_activity(
+            task=task,
+            user_id=request.user.id,
+            action="deleted",
+            message=f"Task '{task.title}' deleted"
+        )
+
         task.delete()
         return Response(status=204)
 
@@ -114,6 +177,7 @@ class TaskDetailUpdateView(RetrieveUpdateAPIView):
     def get_queryset(self):
         return Task.objects.all()
 
+
 class TaskCommentsView(APIView):
     def get(self, request, task_id):
         comments = Comment.objects(task_id=task_id).order_by('-created_at')
@@ -124,12 +188,25 @@ class TaskCommentsView(APIView):
         data = request.data.copy()
         data['task_id'] = task_id
         serializer = CommentSerializer(data=data)
+
         if not serializer.is_valid():
             print(serializer.errors, data)
+
         if serializer.is_valid():
-            serializer.save()
+            comment = serializer.save()
+
+            task = Task.objects(id=task_id).first()
+            if task:
+                log_activity(
+                    task=task,
+                    user_id=request.user.id,
+                    action="commented",
+                    message=f"Commented: {comment.content[:30]}..."
+                )
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class TaskActivityLogAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
