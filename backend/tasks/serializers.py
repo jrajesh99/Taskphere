@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from tasks.models import Task, Board, Comment
+from tasks.models import Task, Board, Comment, ActivityLog
 from accounts.models import User
 from accounts.serializers import UserSerializer
 
@@ -61,3 +61,11 @@ class CommentSerializer(serializers.Serializer):
             "content": instance.content,
             "created_at": instance.created_at,
         }
+
+class ActivityLogSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    task = serializers.CharField()
+    user_id = serializers.CharField()
+    action = serializers.CharField()
+    message = serializers.CharField()
+    created_at = serializers.DateTimeField()

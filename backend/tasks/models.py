@@ -35,3 +35,13 @@ class Comment(me.Document):
 
     meta = {'collection': 'comments'}
 
+User = get_user_model()
+
+class ActivityLog(Document):
+    meta = {'collection': 'activity_logs'}
+
+    task = me.ReferenceField(Task, required=True, reverse_delete_rule=2)
+    user_id = me.StringField(required=True)  # store user ID as string for flexibility
+    action = me.StringField(required=True, choices=["created", "updated", "status_changed", "commented", "deleted"])
+    message = me.StringField()
+    created_at = me.DateTimeField(default=datetime.datetime.now())

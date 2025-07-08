@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.generics import RetrieveUpdateAPIView
 
-from tasks.models import Board, Task, Comment
-from tasks.serializers import BoardSerializer, TaskSerializer, CommentSerializer
+from tasks.models import Board, Task, Comment, ActivityLog
+from tasks.serializers import BoardSerializer, TaskSerializer, CommentSerializer, ActivityLogSerializer
 
 
 class BoardListCreateAPIView(APIView):
@@ -131,3 +131,10 @@ class TaskCommentsView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class TaskActivityLogAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, task_id):
+        logs = ActivityLog.objects(task=task_id).order_by("-created_at")
+        serializer = ActivityLogSerializer(logs, many=True)
+        return Response(serializer.data)
