@@ -8,7 +8,11 @@ export default function EditTaskModal({ task, onClose, onSave }) {
     priority: "Medium",
     due_date: "",
     labels: [],
+    label_colors: {},
   });
+
+  const [newLabel, setNewLabel] = useState("");
+  const [newLabelColor, setNewLabelColor] = useState("#000000");
 
   useEffect(() => {
     if (task) {
@@ -19,6 +23,7 @@ export default function EditTaskModal({ task, onClose, onSave }) {
         priority: task.priority,
         due_date: task.due_date?.split("T")[0],
         labels: task.labels || [],
+        label_colors: task.label_colors || {},
       });
     }
   }, [task]);
@@ -31,11 +36,30 @@ export default function EditTaskModal({ task, onClose, onSave }) {
     }));
   };
 
-  const handleLabelChange = (e) => {
-    const labels = e.target.value.split(",").map((l) => l.trim());
+  const handleAddLabel = () => {
+    const trimmed = newLabel.trim();
+    if (trimmed && !formData.labels.includes(trimmed)) {
+      setFormData((prev) => ({
+        ...prev,
+        labels: [...prev.labels, trimmed],
+        label_colors: {
+          ...prev.label_colors,
+          [trimmed]: newLabelColor,
+        },
+      }));
+      setNewLabel("");
+      setNewLabelColor("#000000");
+    }
+  };
+
+  const handleDeleteLabel = (label) => {
+    const updatedLabels = formData.labels.filter((l) => l !== label);
+    const updatedColors = { ...formData.label_colors };
+    delete updatedColors[label];
     setFormData((prev) => ({
       ...prev,
-      labels,
+      labels: updatedLabels,
+      label_colors: updatedColors,
     }));
   };
 
@@ -65,10 +89,11 @@ export default function EditTaskModal({ task, onClose, onSave }) {
           background: "#fff",
           padding: "20px",
           borderRadius: "8px",
-          width: "300px",
+          width: "350px",
         }}
       >
         <h3>Edit Task</h3>
+
         <input
           name="title"
           value={formData.title}
@@ -110,12 +135,60 @@ export default function EditTaskModal({ task, onClose, onSave }) {
           onChange={handleChange}
           style={{ width: "100%", marginBottom: "10px" }}
         />
-        <input
-          placeholder="Comma separated labels"
-          value={formData.labels.join(", ")}
-          onChange={handleLabelChange}
-          style={{ width: "100%", marginBottom: "10px" }}
-        />
+
+        <div style={{ display: "flex", gap: "5px", marginBottom: "10px" }}>
+          <input
+            value={newLabel}
+            onChange={(e) => setNewLabel(e.target.value)}
+            placeholder="Label"
+            style={{ flex: 2 }}
+          />
+          <input
+            type="color"
+            value={newLabelColor}
+            onChange={(e) => setNewLabelColor(e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <button type="button" onClick={handleAddLabel}>
+            Add
+          </button>
+        </div>
+
+        {formData.labels.length > 0 && (
+          <div style={{ marginBottom: "10px" }}>
+            <strong>Labels:</strong>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+              {formData.labels.map((label) => (
+                <span
+                  key={label}
+                  style={{
+                    backgroundColor: formData.label_colors[label] || "#888",
+                    color: "#fff",
+                    padding: "4px 8px",
+                    borderRadius: "4px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                >
+                  {label}
+                  <button
+                    onClick={() => handleDeleteLabel(label)}
+                    style={{
+                      marginLeft: "5px",
+                      background: "transparent",
+                      border: "none",
+                      color: "#fff",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <button onClick={handleSubmit}>Save</button>
           <button onClick={onClose} style={{ backgroundColor: "#ccc" }}>

@@ -4,9 +4,11 @@ import axios from "../api/axiosConfig";
 export default function BoardForm() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     const token = localStorage.getItem("token");
     try {
       const res = await axios.post(
@@ -17,6 +19,8 @@ export default function BoardForm() {
       alert("Board created!");
     } catch (err) {
       console.error(err.response.data);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,7 +36,9 @@ export default function BoardForm() {
         value={description}
         onChange={(e) => setDescription(e.target.value)}
       />
-      <button type="submit">Create Board</button>
+      <button type="submit" disabled={loading}>
+        {loading ? "Creating Board..." : "Create Board"}
+      </button>
     </form>
   );
 }

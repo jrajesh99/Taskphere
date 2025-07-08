@@ -43,7 +43,8 @@ class TaskListCreateAPIView(APIView):
         data = request.data.copy()
         data["owner_id"] = request.user.id
         serializer = TaskSerializer(data=data)
-        print(serializer.error_messages, data)
+        if not serializer.is_valid():
+            print(serializer.errors)
         if serializer.is_valid():
             task = serializer.save()
             return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)

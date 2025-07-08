@@ -7,7 +7,7 @@ const TaskForm = ({ boardId, onTaskCreated, onTaskUpdated, taskToEdit  }) => {
   const [status, setStatus] = useState("todo");
   const [priority, setPriority] = useState("Medium");
   const [dueDate, setDueDate] = useState("");
-  const [labels, setLabels] = useState("");
+  const [labels, setLabels] = useState([]);
   const [users, setUsers] = useState([]);
   const [formData, setFormData] = useState({ assignees: [] });
   const [labelColors, setLabelColors] = useState({});
@@ -40,7 +40,7 @@ const TaskForm = ({ boardId, onTaskCreated, onTaskUpdated, taskToEdit  }) => {
       setStatus(taskToEdit.status || "todo");
       setPriority(taskToEdit.priority || "Medium");
       setDueDate(taskToEdit.due_date?.slice(0, 10) || "");
-      setLabels(taskToEdit.labels?.join(",") || "");
+      setLabels((taskToEdit.labels || []));
       setLabelColors(taskToEdit.label_colors || {});
       setFormData({ assignees: taskToEdit.assignees || [] });
     }
@@ -56,7 +56,7 @@ const TaskForm = ({ boardId, onTaskCreated, onTaskUpdated, taskToEdit  }) => {
       status,
       priority,
       due_date: dueDate,
-      labels: labels.split(",").map((label) => label.trim()),
+      labels: labels.split(",").map(label => label.trim()).filter(label => label),
       label_colors: labelColors,
       board_id: boardId,
       assignees: formData.assignees,

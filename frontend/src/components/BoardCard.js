@@ -1,8 +1,9 @@
 import TaskColumn from "./TaskColumn";
 import TaskForm from "./TaskForm";
+import CreateTaskModal from "./CreateTaskModal";
 import { useState } from "react";
 
-const statuses = ["todo", "in-progress", "done"];
+const statuses = ["todo", "inprogress", "done"];
 
 export default function BoardCard({
   board,
@@ -12,28 +13,22 @@ export default function BoardCard({
   taskQuery,
   handleStatusChange,
   handleEdit,
-  handleDelete,
   handleTaskCreated,
+  handleDelete,
+  
 }) {
   const [filterPriority, setFilterPriority] = useState("all");
   const [dueDateFilter, setDueDateFilter] = useState("all");
   const [sortBy, setSortBy] = useState("none");
   const [filterLabel, setFilterLabel] = useState(null);
-  const [setTasks] = useState(null);
-  const [taskToEdit, setTaskToEdit] = useState(null);
-  const handleTaskEdit = (task) => setTaskToEdit(task);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [setTasks] = useState({});
+  const handleTaskEdit = handleEdit;
+
 
   const uniqueLabels = Array.from(
     new Set(tasks.flatMap((task) => task.labels || []))
   );
-
-  const handleTaskUpdated = (updatedTask) => {
-    const updatedTasks = tasks.map((t) =>
-      t.id === updatedTask.id ? updatedTask : t
-    );
-    setTasks(updatedTasks);
-    setTaskToEdit(null);
-  };
 
   return (
     <div
@@ -47,6 +42,7 @@ export default function BoardCard({
       <h3>{board.title}</h3>
       <p>{board.description}</p>
 
+      {/* Label Filter */}
       {uniqueLabels.length > 0 && (
         <div style={{ marginBottom: "15px" }}>
           <label>Filter by Label: </label>
@@ -71,6 +67,7 @@ export default function BoardCard({
         </div>
       )}
 
+      {/* Status Filter */}
       <div style={{ marginBottom: "20px" }}>
         <label>Filter Tasks: </label>
         {["all", ...statuses].map((status) => (
@@ -91,6 +88,7 @@ export default function BoardCard({
         ))}
       </div>
 
+      {/* Priority Filter */}
       <div style={{ marginBottom: "20px" }}>
         <label>Priority: </label>
         {["all", "High", "Medium", "Low"].map((level) => (
@@ -111,6 +109,7 @@ export default function BoardCard({
         ))}
       </div>
 
+      {/* Due Date Filter */}
       <div style={{ marginBottom: "20px" }}>
         <label>Due Date: </label>
         {["all", "overdue", "today", "upcoming"].map((type) => (
@@ -131,6 +130,7 @@ export default function BoardCard({
         ))}
       </div>
 
+      {/* Sort Filter */}
       <div style={{ marginBottom: "20px" }}>
         <label>Sort By: </label>
         <select
@@ -150,30 +150,56 @@ export default function BoardCard({
         </select>
       </div>
 
-      {statuses.map((status) => (
-        <TaskColumn
-          key={`${board.id}-${status}`}
-          boardId={board.id}
-          status={status}
-          tasks={tasks}
-          filterStatus={filterStatus}
-          filterPriority={filterPriority}
-          dueDateFilter={dueDateFilter}
-          taskQuery={taskQuery}
-          handleStatusChange={handleStatusChange}
-          handleEdit={handleEdit}
-          handleDelete={handleDelete}
-          sortBy={sortBy}
-          filterLabel={filterLabel}
-        />
-      ))}
+      {/* Create Task */}
+      <button
+        onClick={() => setShowCreateModal(true)}
+        style={{
+          backgroundColor: "#00b894",
+          color: "white",
+          border: "none",
+          padding: "8px 12px",
+          borderRadius: "6px",
+          marginTop: "10px",
+        }}
+      >
+        + New Task
+      </button>
 
-      <TaskForm
+      {/* Task Modal */}
+      <CreateTaskModal
         boardId={board.id}
-        taskToEdit={taskToEdit}
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
         onTaskCreated={handleTaskCreated}
-        onTaskUpdated={handleTaskUpdated}
       />
+
+      {/* Task Columns */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "20px",
+          marginTop: "20px",
+        }}
+      >
+        {statuses.map((status) => (
+          <TaskColumn
+            key={`${board.id}-${status}`}
+            boardId={board.id}
+            status={status}
+            tasks={tasks}
+            filterStatus={filterStatus}
+            filterPriority={filterPriority}
+            dueDateFilter={dueDateFilter}
+            taskQuery={taskQuery}
+            handleStatusChange={handleStatusChange}
+            handleEdit={handleTaskEdit}
+            handleDelete={handleDelete}
+            sortBy={sortBy}
+            filterLabel={filterLabel}
+          />
+        ))}
+      </div>
     </div>
   );
 }
