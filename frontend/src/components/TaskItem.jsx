@@ -1,6 +1,7 @@
 import { Draggable } from "@hello-pangea/dnd";
 import React, { useState } from "react";
 import CommentSection from "./CommentSection";
+import TaskActivityLog from "./TaskActivityLog";
 
 export default function TaskItem({
   task,
@@ -10,6 +11,9 @@ export default function TaskItem({
   handleDelete,
   taskQuery,
 }) {
+  const [showComments, setShowComments] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
+
   const highlightMatch = (text, query) => {
     if (!query) return text;
     const regex = new RegExp(`(${query})`, "gi");
@@ -23,17 +27,14 @@ export default function TaskItem({
         )
       );
   };
+
   const getContrastColor = (hexColor) => {
-    // Convert hex to RGB
     const r = parseInt(hexColor.substr(1, 2), 16);
     const g = parseInt(hexColor.substr(3, 2), 16);
     const b = parseInt(hexColor.substr(5, 2), 16);
-    // Calculate luminance
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance > 0.6 ? "#000000" : "#ffffff";
   };
-
-  const [showComments, setShowComments] = useState(false);
 
   return (
     <Draggable draggableId={task.id.toString()} index={index}>
@@ -43,7 +44,6 @@ export default function TaskItem({
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           style={{
-            background: "#f9f9f9",
             backgroundColor: snapshot.isDragging ? "#e0f7fa" : "#f9f9f9",
             borderRadius: "8px",
             padding: "10px",
@@ -64,13 +64,11 @@ export default function TaskItem({
                     : task.priority === "Medium"
                     ? "#ffc107"
                     : "#28a745",
-                color: "white",
+                color: "#fff",
                 padding: "2px 6px",
                 borderRadius: "4px",
                 fontSize: "0.75rem",
                 marginLeft: "8px",
-                fontSize: "0.9em",
-                color: "#666",
               }}
             >
               {task.priority}
@@ -134,11 +132,28 @@ export default function TaskItem({
             >
               💬 Comments
             </button>
-
+            <button
+              onClick={() => setShowLogs((prev) => !prev)}
+              style={{
+                marginTop: "5px",
+                fontSize: "14px",
+                color: "#2d3436",
+                marginLeft: "8px",
+              }}
+            >
+              📜 Logs
+            </button>
             {showComments && (
               <CommentSection
                 taskId={task.id}
                 onClose={() => setShowComments(false)}
+              />
+            )}
+            {showLogs && (
+              <TaskActivityLog
+                taskId={task.id}
+                searchTerm={taskQuery}
+                onClose={() => setShowLogs(false)}
               />
             )}
           </div>

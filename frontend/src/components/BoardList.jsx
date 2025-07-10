@@ -23,9 +23,15 @@ export default function BoardList() {
 
         const taskMap = {};
         for (let board of boardRes.data) {
-          const taskRes = await axios.get(`tasks/?board=${board.id}`, {
+          const params = new URLSearchParams();
+          params.append("board", board.id);
+          if (filterStatus !== "all") params.append("status", filterStatus);
+          if (taskQuery) params.append("search", taskQuery);
+
+          const taskRes = await axios.get(`tasks/?${params.toString()}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
+
           taskMap[board.id] = taskRes.data;
         }
 
@@ -37,7 +43,7 @@ export default function BoardList() {
     };
 
     fetchBoardsAndTasks();
-  }, [token]);
+  }, [token, filterStatus, taskQuery]);
 
   const handleStatusChange = async (taskId, newStatus) => {
     try {

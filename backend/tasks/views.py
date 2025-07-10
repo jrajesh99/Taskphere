@@ -1,11 +1,15 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
+from mongoengine.queryset.visitor import Q
 from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.pagination import PageNumberPagination
+from django.utils.html import escape
 
 from tasks.models import Board, Task, Comment, ActivityLog
-from tasks.serializers import BoardSerializer, TaskSerializer, CommentSerializer, ActivityLogSerializer
-from tasks.utils import log_activity  # ✅ Activity log function
+from tasks.serializers import BoardSerializer, TaskSerializer, CommentSerializer, ActivityLogSerializer, PaginatedActivityLogSerializer
+from tasks.utils import log_activity
+from accounts.models import User
 
 
 class BoardListCreateAPIView(APIView):
@@ -31,12 +35,23 @@ class TaskListCreateAPIView(APIView):
 
     def get(self, request):
         board_id = request.query_params.get('board')
-        query = {"owner_id": request.user.id}
+        search = request.query_params.get('search', "").strip()
+        status_filter = request.query_params.get('status', "").strip()
+
+        # Start with base query
+        query = Q(owner_id=request.user.id)
 
         if board_id:
-            query["board_id"] = board_id
+            query &= Q(board_id=board_id)
 
-        tasks = Task.objects(**query)
+        if status_filter and status_filter.lower() != "all":
+            query &= Q(status__iexact=status_filter)  # case-insensitive
+
+        if search:
+            search_q = Q(title__icontains=search) | Q(description__icontains=search)
+            query &= search_q
+
+        tasks = Task.objects(query)
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data)
 
@@ -44,18 +59,14 @@ class TaskListCreateAPIView(APIView):
         data = request.data.copy()
         data["owner_id"] = request.user.id
         serializer = TaskSerializer(data=data)
-        if not serializer.is_valid():
-            print(serializer.errors)
         if serializer.is_valid():
             task = serializer.save()
-
             log_activity(
                 task=task,
                 user_id=request.user.id,
                 action="created",
                 message=f"Task '{task.title}' created"
             )
-
             return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -179,6 +190,8 @@ class TaskDetailUpdateView(RetrieveUpdateAPIView):
 
 
 class TaskCommentsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request, task_id):
         comments = Comment.objects(task_id=task_id).order_by('-created_at')
         serializer = CommentSerializer(comments, many=True)
@@ -187,14 +200,11 @@ class TaskCommentsView(APIView):
     def post(self, request, task_id):
         data = request.data.copy()
         data['task_id'] = task_id
+        data['author'] = request.user.email
+
         serializer = CommentSerializer(data=data)
-
-        if not serializer.is_valid():
-            print(serializer.errors, data)
-
         if serializer.is_valid():
             comment = serializer.save()
-
             task = Task.objects(id=task_id).first()
             if task:
                 log_activity(
@@ -203,7 +213,6 @@ class TaskCommentsView(APIView):
                     action="commented",
                     message=f"Commented: {comment.content[:30]}..."
                 )
-
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -213,5 +222,10 @@ class TaskActivityLogAPIView(APIView):
 
     def get(self, request, task_id):
         logs = ActivityLog.objects(task=task_id).order_by("-created_at")
-        serializer = ActivityLogSerializer(logs, many=True)
-        return Response(serializer.data)
+
+        paginator = PaginatedActivityLogSerializer()
+        paginated_logs = paginator.paginate_queryset(logs, request)
+
+        serializer = ActivityLogSerializer(paginated_logs, many=True)
+        return paginator.get_paginated_response(serializer.data)
+

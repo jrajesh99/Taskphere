@@ -7,5 +7,5 @@ urlpatterns = [
     path("tasks/<str:pk>/", TaskDetailAPIView.as_view()),
     path('tasks/<str:id>/', TaskDetailUpdateView.as_view(), name='task-detail'),
     path('tasks/<str:task_id>/comments/', TaskCommentsView.as_view(), name='task-comments'),
-    path("tasks/<str:task_id>/activity/", TaskActivityLogAPIView.as_view(), name="task-activity"),
+    path("tasks/<str:task_id>/logs/", TaskActivityLogAPIView.as_view(), name="task-activity"),
 ]
